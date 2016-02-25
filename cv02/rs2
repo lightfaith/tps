@@ -1,0 +1,103 @@
+hostname RS2
+ip routing
+
+vlan 10
+vlan 20
+vlan 112
+vlan 113
+vlan 122
+vlan 123
+
+ip vrf DESET
+	rd 100:10
+	exit
+
+ip vrf DVACET
+	rd 100:20
+	exit
+
+router ospf 1 vrf DESET
+	capability vrf-lite
+	exit
+
+router ospf 2 vrf DVACET
+	capability vrf-lite
+	exit
+
+int r f0/1-2
+	sw tr enc dot1q
+	sw mo tr
+	sw tr all vlan none
+	sw tr all vlan add 10,20
+	sw tr nat vlan 1
+	no sh
+	exit
+
+int r f0/3-4
+	desc RS2-RS1-channelled
+	sw tr enc dot1q
+	sw mo tr
+	sw tr nat vlan 1
+	channel-group 1 mode active
+	no sh
+	exit
+
+int port-channel 1
+	desc RS2-RS1
+	sw tr enc dot1q
+	sw mo tr
+	sw tr nat vlan 1
+	sw tr all vlan none
+	sw tr all vlan add 10,20
+	exit
+
+!----------------------------
+
+int f0/5
+	sw tr enc dot1q
+	sw mo tr
+	sw tr all vlan 112,122
+	no sh
+	exit
+
+int f0/6
+	sw tr enc dot1q
+	sw mo tr
+	sw tr all vlan 113,123
+
+int vlan 10
+	ip vrf forw DESET
+	ip ospf 1 a 0
+	ip add 10.0.10.3 255.255.255.0
+	exit
+
+int vlan 20
+	ip vrf forw DVACET
+	ip ospf 2 a 0
+	ip add 20.0.10.3 255.255.255.0
+	exit
+
+int vlan 112
+	ip vrf forw DESET
+	ip ospf 1 a 0
+	ip add 10.1.0.10 255.255.255.252
+
+int vlan 122
+	ip vrf forw DVACET
+	ip ospf 2 a 0
+	ip add 20.1.0.10 255.255.255.252
+	exit
+
+int vlan 113
+	ip vrf forw DESET
+	ip ospf 1 a 0
+	ip add 10.1.0.14 255.255.255.252
+	exit
+
+int vlan 123
+	ip vrf forw DVACET
+	ip ospf 2 a 0
+	ip add 20.1.0.14 255.255.255.252
+	exit
+
+

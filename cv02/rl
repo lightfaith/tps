@@ -1,0 +1,100 @@
+hostname RL
+
+ip vrf DESET
+	rd 100:10
+	route-target export 100:10
+	route-target import 100:20
+	exit
+
+ip vrf DVACET
+	rd 100:20
+	route-target export 100:20
+	route-target import 100:10
+	exit
+
+router ospf 1 vrf DESET
+	redistribute bgp 10 subnets
+	exit
+
+router ospf 2 vrf DVACET
+	redistribute bgp 10 subnets
+	exit
+
+
+vlan 111
+vlan 121
+vlan 113
+vlan 123
+	exit
+
+int vlan 111
+	ip vrf for DESET
+	ip ospf 1 a 0
+	ip add 10.1.0.5 255.255.255.252
+	no sh
+	exit
+
+int vlan 121
+	ip vrf for DVACET
+	ip ospf 2 a 0
+	ip add 20.1.0.5 255.255.255.252
+	no sh
+	exit
+
+int vlan 113
+	ip vrf for DESET
+	ip ospf 1 a 0
+	ip add 10.1.0.13 255.255.255.252
+	no sh
+	exit
+
+int vlan 123
+	ip vrf for DVACET
+	ip ospf 2 a 0
+	ip add 20.1.0.13 255.255.255.252
+	no sh
+	exit
+
+!----------------------------
+
+int f0/2/0
+	sw tr enc d
+	sw mo tr
+	sw tr all vlan 111,121,1-2,1002-1005
+	exit
+
+int f0/2/1
+	sw tr enc d
+	sw mo tr
+	sw tr all vlan 113,123,1-2,1002-1005
+	exit
+
+
+int f0/2/2
+	sw mo ac
+	sw acc vlan 1
+	no sh
+	exit
+
+int vlan 1
+	ip add 10.1.1.2 255.255.255.252
+	exit
+
+
+router bgp 10
+	neighbor 10.1.1.1 remote-as 10
+	address-family ipv4 vrf DESET
+		redistribute connected
+		redistribute ospf 1 vrf DESET
+		no sync
+		exit-address-family
+	address-family ipv4 vrf DVACET
+		redistribute connected
+		redistribute ospf 2 vrf DVACET
+		no sync
+		exit-address-family
+
+! bgp 2 address families (connected + 1 vrf)
+! do ospf redistribute bgp
+! na RS2 capability vrf-lite
+

@@ -1,0 +1,44 @@
+hostname Sw2
+vlan 10
+vlan 20
+	exit
+
+int f 0/1
+	desc Sw2-RS2
+	sw mo tr
+	sw tr nat vlan 1
+	sw tr all vlan none
+	sw tr all vlan add 10,20
+
+int f0/2
+	desc Sw2-RS1
+	sw mo tr
+	sw tr nat vlan 1
+	sw tr all vlan none
+	sw tr all vlan add 10,20
+	no sh
+	exit
+
+int r g0/1-2
+	desc SW1-SW2-channeled
+	sw mo tr
+	sw tr nat vlan 1
+	channel-group 1 mode act
+	no sh
+	exit
+
+int port-channel 1
+	desc SW1-SW2
+	sw mo tr
+	sw tr nat vlan 1
+	sw tr all vlan none
+	sw tr all vlan add 10,20
+	no sh
+	exit
+
+int L0
+	ip add 10.0.10.99 255.255.255.0
+	no sh
+	exit
+
+
