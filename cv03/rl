@@ -1,0 +1,32 @@
+hostname RL
+router ospf 1
+	exit
+
+mpls label proto ldp
+mpls ldp router-id l0
+mpls ip
+
+int l0
+	ip add 172.16.0.4 255.255.255.255
+	ip ospf 1 a 0
+	no sh
+int g0/0
+	ip add 10.0.0.14 255.255.255.252
+	no sh
+	ip ospf 1 a 0
+	mpls ip
+int l1
+	ip add 192.168.4.1 255.255.255.0
+	! no OSPF
+	exit
+
+router bgp 200
+	neighbor 172.16.0.3 remote-as 200
+	neighbor 172.16.0.3 ebgp-multihop 255
+	neighbor 172.16.0.3 update-source l0
+	neighbor 172.16.0.2 remote-as 100
+	neighbor 172.16.0.2 ebgp-multihop 255
+	neighbor 172.16.0.2 update-source l0
+	network 192.168.4.0 mask 255.255.255.0
+	exit
+

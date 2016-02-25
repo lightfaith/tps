@@ -1,0 +1,5 @@
+sh ip bgp sum
+sh mpls ldp nei
+sh mpls forw
+sh mpls ip bind
+sh mpls ldp bind
