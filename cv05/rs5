@@ -1,0 +1,21 @@
+hostname RS5
+
+ip routing
+
+router ospf 2
+	exit
+
+int f0/1
+	no sw
+	ip add 10.0.0.2 255.255.255.0
+	ip ospf 2 a 1
+	desc RS5-RI
+	no sh
+	exit
+
+!int l0
+!	ip add 10.0.0.9 255.255.255.252
+!	ip ospf 1 a 0
+!	desc LUPBEK
+!	exit
+

@@ -1,0 +1,22 @@
+hostname RJ
+
+router ospf 1
+	exit
+
+mpls ip
+mpls label protocol ldp
+
+int s0/1/0
+	clo r 128000
+	ip add 1.2.3.2 255.255.255.252
+	ip ospf 1 a 0
+	mpls ip
+	exit
+
+int s0/1/1
+	clo r 128000
+	ip add 1.2.3.5 255.255.255.252
+	ip ospf 1 a 0
+	mpls ip
+	exit
+
