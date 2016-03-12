@@ -1,0 +1,44 @@
+!*RF
+hostname R32_RF
+!
+! ^VRFs
+!
+ip vrf A
+  rd 65001:99321
+  route-t e 65001:321
+  exit
+
+ip vrf B
+  rd 65001:99322
+  route-t e 65001:322
+  exit
+
+!
+! ^vlans RS-R
+!
+int f0/0.321
+  desc R-RS-A
+  ip vrf forw A
+  enc d 321
+  exit
+
+int f0/0.322
+  desc R-RS-B
+  ip vrf forw B
+  enc d 322
+  exit
+
+int f0/0
+  desc R-RS-physical
+  no sh
+  exit
+
+ 
+!
+! ^routing protocols
+!
+
+!
+! ^interfaces
+!
+

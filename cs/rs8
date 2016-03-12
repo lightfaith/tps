@@ -1,0 +1,128 @@
+!*RS8
+hostname RS32_RS8
+banner motd $
+G: 3  ( )
+R: 2   |   
+      ( )
+       |   
+       |   
+[*]---( )
+       |
+       |
+      ( )
+$
+
+vtp mode off
+ip routing
+ip cef dist
+system mtu 1500
+
+!
+! ^VRFs
+!
+
+ip vrf A
+  rd 65001:88321
+
+ip vrf B
+  rd 65001:88322
+
+!
+! ^vlans RS-R
+!
+
+vlan 321
+  name vlan32A
+
+vlan 322
+  name vlan32B
+
+!
+! ^vlans for servers
+!
+
+vlan 3210
+  name vlan32AServer
+
+vlan 3220
+  name vlan32BServer
+
+!
+! ^routing protocols
+!
+
+router ospf 100 vrf A
+  router-id 100.0.3.2
+  redistribute connected subnets
+  exit
+
+router bgp 65132
+  bgp router-id 100.0.3.2
+  redi con
+  nei 1.99.3.2
+  add ipv4 vrf B
+    redi con
+    exi
+  exit
+
+!
+! ^interfaces
+!
+
+int r f0/1-24
+  desc NULL
+  sh 
+  exit
+int r g0/1-2
+  desc NULL
+  sh
+  exit
+
+int r f0/19-21
+  desc RS-Servers-A-physical
+  sw mo ac
+  sw ac vlan 3210
+  no sh
+  exit
+
+int r f0/22-24
+  desc RS-Servers-B-physical
+  sw mo ac
+  sw ac vlan 3220
+  no sh
+  exit
+
+int f0/1
+  desc RS-R-physical
+  sw tr enc dot1q
+  sw mo tr
+  sw tr all vlan 321,322
+  no sh
+  exit
+
+int vlan 321
+  desc RS-R-A
+  ip vrf forw A
+  ip add 33.3.2.2 255.255.255.252
+  no sh
+  exit
+
+int vlan 322
+  desc RS-R-B
+  ip vrf forw B
+  ip add 44.3.2.2 255.255.255.252
+  no sh
+  exit
+
+int vlan 3210
+  desc RS-Servers-A
+  ip vrf forw A
+  ip add 3.3.2.1 255.255.255.0
+  exit
+
+int vlan 3220
+  desc RS-Servers-B
+  ip vrf forw B
+  ip add 4.3.2.1 255.255.255.0
+  exit
+

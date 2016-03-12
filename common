@@ -13,6 +13,7 @@ cry key gen rsa
 768
 ip ssh v 2
 line vty 0 4
+ exec-timeout 0
  tra in tel ssh
  loggin sync
  login local
