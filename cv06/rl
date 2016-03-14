@@ -1,0 +1,111 @@
+hostname RL
+ipv6 uni
+!Note that this device does not need VRF
+ip vrf A
+
+!Variant 2: OSPFv3
+router ospfv3 1
+	router-id 5.5.5.5
+	address-family ipv4 vrf A
+		exit-address-family
+	exit
+do clear ip ospf process
+
+int l0
+	ip vrf forw A
+	ipv6 enable ! for OSPFv3
+	ospfv3 1 ipv4 area 0
+	ip add 11.0.0.1 255.255.255.0
+	no sh
+int l1
+	ip vrf forw A
+	ipv6 enable ! for OSPFv3
+	ospfv3 1 ipv4 area 0
+	ip add 12.0.0.1 255.255.255.0
+	no sh
+int l2
+	ip vrf forw A
+	ipv6 enable ! for OSPFv3
+	ospfv3 1 ipv4 area 0
+	ip add 13.0.0.1 255.255.255.0
+	no sh
+	exit
+
+int g0/0
+	ip vrf forw A
+	ipv6 enable ! for OSPFv3
+	ospfv3 1 ipv4 area 0
+	ip add 10.0.0.2 255.255.255.0
+	desc RL-RI
+	no sh
+	exit
+
+!Variant 1: RIP
+router rip
+	version 2
+	no auto-summary
+	address-family ipv4 vrf A
+		network 10.0.0.0
+		net 11.0.0.0
+		net 12.0.0.0
+		net 13.0.0.0
+		exit-address-family
+	exit
+
+!Variant 3: EIGRP
+router eigrp 100
+	no auto-summary
+	address-family ipv4 vrf A
+		autonomous-system 100
+		net 10.0.0.0 0.0.0.255
+		net 11.0.0.0 0.0.0.255
+		net 12.0.0.0 0.0.0.255
+		net 13.0.0.0 0.0.0.255
+		exit-address-family
+	exit
+
+
+
+
+
+
+
+
+
+!RIP, OSPF and EIGRP in use, EIGRP wins due to AD
+RL#sh ip ro vrf A
+
+Routing Table: A
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 3 subnets, 2 masks
+C        10.0.0.0/24 is directly connected, GigabitEthernet0/0
+L        10.0.0.2/32 is directly connected, GigabitEthernet0/0
+D        10.0.1.0/24 [90/30720] via 10.0.0.1, 00:04:55, GigabitEthernet0/0
+      11.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        11.0.0.0/24 is directly connected, Loopback0
+L        11.0.0.1/32 is directly connected, Loopback0
+      12.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        12.0.0.0/24 is directly connected, Loopback1
+L        12.0.0.1/32 is directly connected, Loopback1
+      13.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        13.0.0.0/24 is directly connected, Loopback2
+L        13.0.0.1/32 is directly connected, Loopback2
+      14.0.0.0/24 is subnetted, 1 subnets
+D        14.0.0.0 [90/158720] via 10.0.0.1, 00:04:55, GigabitEthernet0/0
+      15.0.0.0/24 is subnetted, 1 subnets
+D        15.0.0.0 [90/158720] via 10.0.0.1, 00:04:55, GigabitEthernet0/0
+      16.0.0.0/24 is subnetted, 1 subnets
+D        16.0.0.0 [90/158720] via 10.0.0.1, 00:04:55, GigabitEthernet0/0
+RL# 
+

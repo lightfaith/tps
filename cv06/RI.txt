@@ -1,0 +1,167 @@
+!inspirováno https://aitaseller.wordpress.com/2012/09/10/mpls-layer-3-vpns/
+!customer má spojené dva subnety pøes MPLS, mezi nimi routuje RIPem (a pozdeji OSPFv3 a EIGRPem) mezi routery v rùzých sitách
+!spojuje je ISP s MPLS, kde má natažené BGP
+
+hostname RI
+
+ip vrf A
+rd 100:1
+route-target import 100:1
+route-target export 100:1
+exit
+
+do sh ip vrf
+
+interface lo0
+ desc ISP-LO
+ ip address 1.2.3.9 255.255.255.252
+ ip ospf network point-to-point
+ no sh
+ exit
+
+interface serial 0/0/0
+ desc ISP
+ ip address 1.2.3.1 255.255.255.252 
+ no sh
+ clock rate 12800
+ exit
+
+interface FastEthernet0/0
+ desc CUSTOMER1
+ ip vrf forwarding A
+ ip address 10.0.0.1 255.255.255.0
+ no sh
+ exit
+
+router ospf 1
+ !MPLS ISP
+ network 1.2.3.8 0.0.0.3 area 0
+ network 1.2.3.0 0.0.0.3 area 0
+exit
+
+router rip
+ version 2
+ address-family ipv4 vrf A
+ network 10.0.0.1 
+exit
+
+do show ip route
+do show ip route vrf A
+
+mpls ip
+mpls label protocol ldp
+interface serial 0/0/0
+mpls ip
+exit
+mpls ldp router-id Loopback 0 force 
+
+do ping vrf A 1.2.3.13
+do ping 1.2.3.13
+
+router bgp 100
+neighbor 1.2.3.13 remote-as 100
+neighbor 1.2.3.13 update-source loopback 0
+neighbor 1.2.3.13 activate
+address-family vpnv4
+ neighbor 1.2.3.13 activate
+ neighbor 1.2.3.13 send-community both
+ exit
+address-family ipv4 vrf A
+  redistribute rip
+  neighbor 1.2.3.13 remote-as 100
+  neighbor 1.2.3.13 update-source loopback 0
+  neighbor 1.2.3.13 activate 
+ exit
+exit
+
+!redistribuce z BGP do RIP
+router rip
+ version 2
+ no auto-summary
+ address-family ipv4 vrf A
+ redistribute bgp 100 metric 1  
+ exit
+exit
+
+router ospf 1
+ router-id 2.2.2.2
+ redistribute bgp 100 metric 1 subnets
+exit
+
+do ping 1.2.3.13
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!ADDED OSPF
+
+ipv6 unicast-routing
+
+!cannot RUN on iOS version 15.1(3)T4
+router ospfv3 2
+ router-id 2.2.2.2
+ address-family ipv4 vrf A
+  redistribute bgp 100 metric 1  
+ exit
+exit
+ 
+router bgp 100
+ address-family ipv4 vrf A
+  redistribute ospf 2
+ exit
+exit 
+
+interface FastEthernet0/0
+ ipv6 enable
+ ospfv3 2 ipv4 area 0
+exit 
+
+do clear ospfv3 process
+yes
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!ADDED EIGRP
+
+router eigrp 100
+ no auto-summary
+ address-family ipv4 vrf A
+  redistribute bgp 100 metric 1 1 255 1 1500
+  !Warning: EIGRP Autonomous-System number must be provided
+  autonomous-system 100  
+  network 10.0.0.0 0.0.0.255
+ exit
+exit
+
+router bgp 100
+ address-family ipv4 vrf A
+  redistribute eigrp 100
+ exit
+exit
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+do show ip route vrf A 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 3 subnets, 2 masks
+C        10.0.0.0/24 is directly connected, FastEthernet0/0
+L        10.0.0.1/32 is directly connected, FastEthernet0/0
+B        10.0.1.0/24 [200/0] via 1.2.3.13, 00:01:42
+      11.0.0.0/24 is subnetted, 1 subnets
+D        11.0.0.0 [90/156160] via 10.0.0.2, 00:03:18, FastEthernet0/0
+      12.0.0.0/24 is subnetted, 1 subnets
+D        12.0.0.0 [90/156160] via 10.0.0.2, 00:03:18, FastEthernet0/0
+      13.0.0.0/24 is subnetted, 1 subnets
+D        13.0.0.0 [90/156160] via 10.0.0.2, 00:03:18, FastEthernet0/0
+      14.0.0.0/24 is subnetted, 1 subnets
+B        14.0.0.0 [200/156160] via 1.2.3.13, 00:01:42
+      15.0.0.0/24 is subnetted, 1 subnets
+B        15.0.0.0 [200/156160] via 1.2.3.13, 00:01:42
+      16.0.0.0/24 is subnetted, 1 subnets
+B        16.0.0.0 [200/156160] via 1.2.3.13, 00:01:42
+
+
+ 
+
+ 
