@@ -1,0 +1,18 @@
+hostname RL
+
+router ospf 1
+	mpls ldp autoconfig
+	exit
+
+int s0/0/0
+	clo r 128000
+	ip add 172.16.0.10 255.255.255.252
+	ip ospf 1 a 0
+	no sh
+
+int g0/0.20
+	enc dot 20
+	xconnect 10.1.0.3 43 enc mpls
+	no sh
+
+	

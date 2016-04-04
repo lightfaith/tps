@@ -1,0 +1,9 @@
+hostname RR
+
+int s0/0/0
+	enc fra
+	ip add 192.168.1.2 255.255.255.252
+	fram intf-type dte
+	fram interface-dlci 50
+	no sh
+
