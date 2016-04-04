@@ -1,5 +1,17 @@
 !*RF
 hostname R32_RF
+banner motd $
+G: 3  ( )
+R: 2   |   
+      ( )
+       |   
+       |   
+[ ]---(*)
+       |
+       |
+      ( )
+$
+
 !
 ! ^VRFs
 !
@@ -13,19 +25,49 @@ ip vrf B
   route-t e 65001:322
   exit
 
+ 
 !
-! ^vlans RS-R
+! ^routing protocols
 !
+
+router ospf 100 vrf A
+  router-id 33.3.2.1 !1.0.3.2
+  redistribute connected subnets
+  exit
+
+router bgp 65001
+  bgp router-id 1.0.3.2
+  redi con
+  add ipv4 vrf B
+    bgp router-id 1.0.3.2
+    redi con
+    nei 44.3.2.2 remote-as 65132
+    nei 44.3.2.2 activate
+    exi
+  exit
+
+
+!
+! ^interfaces
+!
+
+int l1
+  ip add 1.99.3.2 255.255.255.255
+  exit
+
 int f0/0.321
-  desc R-RS-A
   ip vrf forw A
+  desc R-RS-A
   enc d 321
+  ip add 33.3.2.1 255.255.255.252
+  ip ospf 100 a 321
   exit
 
 int f0/0.322
-  desc R-RS-B
   ip vrf forw B
+  desc R-RS-B
   enc d 322
+  ip add 44.3.2.1 255.255.255.252
   exit
 
 int f0/0
@@ -33,12 +75,4 @@ int f0/0
   no sh
   exit
 
- 
-!
-! ^routing protocols
-!
-
-!
-! ^interfaces
-!
 

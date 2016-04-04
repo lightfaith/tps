@@ -59,9 +59,11 @@ router ospf 100 vrf A
 router bgp 65132
   bgp router-id 100.0.3.2
   redi con
-  nei 1.99.3.2
   add ipv4 vrf B
+    bgp router-id 100.0.3.2
     redi con
+    nei 44.3.2.1 remote-as 65001
+    nei 44.3.2.1 activate
     exi
   exit
 
@@ -104,6 +106,7 @@ int vlan 321
   desc RS-R-A
   ip vrf forw A
   ip add 33.3.2.2 255.255.255.252
+  ip ospf 100 a 321
   no sh
   exit
 
