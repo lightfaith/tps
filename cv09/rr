@@ -1,0 +1,65 @@
+hostname RR
+router ospf 1
+	router-id 2.2.2.2
+	exit
+
+router rip
+	no auto
+	net 192.168.0.0
+	net 192.168.0.4
+	net 22.22.22.22
+	exit
+
+int g0/0
+	ip add 10.0.0.5 255.255.255.252
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int g0/1
+	ip add 10.0.0.2 255.255.255.252
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int l0
+	ip add 2.2.2.2 255.255.255.255
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int l1
+	ip add 22.22.22.22 255.255.255.255
+	no sh
+	exit
+
+! T0 will have GRE
+int T0
+	ip add 192.168.0.5 255.255.255.252
+	tun sou l0
+	tun dest 3.3.3.3
+	no sh
+	exit
+
+crypto isakmp policy 10
+    auth pre-share
+    exit
+cry isakmp key CISCO add 1.1.1.1 ! peer address
+cry ipsec transform-set TRANSFORMER esp-3des esp-sha-hmac
+    mode trans
+    exit
+crypto ipsec profile IPSECPROFILE
+    set transform-set TRANSFORMER
+    exit
+
+! T1 will have GRE+IPSec
+int T1
+	ip add 192.168.0.2 255.255.255.252
+    tun mode gre ip
+    tun prot ipsec profile IPSECPROFILE
+	tun sou l0
+	tun dest 1.1.1.1
+	no sh
+	exit
+
+

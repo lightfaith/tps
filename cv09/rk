@@ -1,0 +1,65 @@
+hostname RK
+router ospf 1
+	router-id 3.3.3.3
+	exit
+
+router rip
+	no auto
+	net 192.168.0.4
+	net 192.168.0.8
+	net 33.33.33.33
+	exit
+
+int f0/0
+	ip add 10.0.0.9 255.255.255.252
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int f0/1
+	ip add 10.0.0.6 255.255.255.252
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int l0
+	ip add 3.3.3.3 255.255.255.255
+	ip ospf 1 a 0
+	no sh
+	exit
+
+int l1
+	ip add 33.33.33.33 255.255.255.255
+	no sh
+	exit
+
+crypto isakmp policy 10
+	auth pre-share
+	exit
+cry isakmp key cisco add 1.1.1.1 ! peer address
+cry ipsec transform-set TRANSFORMER esp-3des esp-sha-hmac
+	mode trans
+	exit
+crypto ipsec profile IPSECPROFILE
+	set transform-set TRANSFORMER
+	exit
+
+! T0 will have IPSec
+int T0
+	ip add 192.168.0.9 255.255.255.252
+	tun mode ipsec ipv4
+	tun prot ipsec profile IPSECPROFILE
+	tun sou l0
+	tun dest 1.1.1.1
+	no sh
+	exit
+
+! T1 will have GRE
+int T1
+	ip add 192.168.0.6 255.255.255.252
+	tun sou l0
+	tun dest 2.2.2.2
+	no sh
+	exit
+
+
