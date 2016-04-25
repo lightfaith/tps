@@ -1,0 +1,84 @@
+hostname RL
+
+router isis 1
+  net 49.0001.0100.0000.0009.00
+  exit
+
+int g0/0
+  ip add 10.0.0.10 255.255.255.252
+  ip router isis 1
+  isis circuit-type level-1
+  no sh
+  exit
+
+int l0
+  ip add 10.0.0.14 255.255.255.255
+  ip router isis 1
+  isis circuit-type level-1
+  no sh
+  exit
+
+int g0/1
+  ipv6 add 2001:db8:0:3::1/64
+  no sh
+  exit
+
+! ISATAP CLIENT
+int tunnel 0 
+  no ip add
+  ipv6 address autoconfig
+  ipv6 enable
+  tun mode ipv6ip
+  tun source l0
+  tun dest 10.0.0.12
+  exit
+! sh, nosh tunnel if nothing
+
+! ISATAP SERVER
+!int tunnel 0
+!  ipv6 address 2001:db8::/64 eui-64
+!  no ipv6 nd ra suppress
+!  tunnel source l0
+!  tun mode ipv6ip isatap
+!  exit
+! sh ipv6 neighbors tunnel 0 ! use nexthops for static route to client networks
+! sh, nosh tunnel if nothing
+
+
+! 6to4
+int tun 0
+  no ip add
+  no ip redir
+  ipv6 addr 2002:0A00:E::/128
+  tun source l0
+  tun mode ipv6ip 6to4
+  exit
+ipv6 ro 2002:a00:c::/128 t 0
+ipv6 ro 2002:a00:d::/128 t 0
+ipv6 route 2001:db8:0:1::/64 2002:0A00:C::
+ipv6 route 2001:db8:0:2::/64 2002:0A00:D::
+
+
+! 6rd
+ipv6 general-prefix PREFIKS 6rd tunnel 0
+ipv6 unicast-routing
+ipv6 cef
+
+int t0
+  no ip add
+  no ip redi
+  ipv6 ena
+  tun sou l0
+  tun mo ipv6ip 6rd
+  tun 6rd prefix 2001:db8::/32
+  tun 6rd br 10.0.0.14 ! if you are BR, ignore this line
+  no sh
+  exit
+
+int g0/0
+  ipv6 address PREFIKS ::/64 eui-64
+  ipv6 enable
+  exit
+ipv6 route ::/0 tunnel0 2001:db8:0A00:000C::
+
+! something is wrong here

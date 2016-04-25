@@ -1,0 +1,30 @@
+hostname RS5
+router isis 1
+  net 49.0001.0100.0000.0001.00
+  exit
+
+int f0/1
+  no sw
+  ip add 10.0.0.1 255.255.255.252
+  ip router isis 1
+  isis circuit-type level-1
+  no sh
+  exit
+
+int f0/2
+  no sw
+  ip add 10.0.0.9 255.255.255.252
+  ip router isis 1
+  isis circuit-type level-1
+  no sh
+  exit
+
+int f0/3
+  no sw
+  ip add 10.0.0.5 255.255.255.252
+  ip router isis 1
+  isis circuit-type level-1
+  no sh
+  exit
+
+

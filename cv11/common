@@ -1,0 +1,25 @@
+en
+terminal monitor
+conf t
+no ip domain-lookup
+hostname something
+username admin pass cisco
+username root pass cisco
+username en pass cisco
+username cisco pass cisco
+ena sec cisco
+ip domain-name cisco.vsb.cz
+cry key gen rsa
+768
+ip ssh v 2
+line vty 0 4
+ exec-timeout 0
+ tra in tel ssh
+ loggin sync
+ login local
+ exit
+line con 0
+ loggin sync
+ exit
+
+
