@@ -1,0 +1,50 @@
+hostname RL
+ip ro 0.0.0.0 0.0.0.0 s0/0/0
+
+int l0
+  ip add 10.0.10.1 255.255.255.0
+  no sh
+
+int s0/0/0
+  clo r 128000
+  ip add 192.168.0.14 255.255.255.252
+  no sh
+
+! IPSec
+
+crypto isakmp policy 10
+  encr 3des
+  auth pre-share
+  group 2
+  exit
+
+crypto isakmp key cisco address 0.0.0.0 0.0.0.0
+crypto isakmp keepalive 30 5
+
+crypto ipsec transform-set TRANSFORMER esp-3des esp-sha-hmac
+  mode tran
+  exit
+
+cryp ipsec profile PROFILER
+  set transform-set TRANSFORMER
+
+
+! multipoint GREs
+
+int tunnel 1
+  ip add 10.0.0.254 255.255.255.0
+  no ip redirects
+  ip mtu 1400
+  tun so s0/0/0
+  tun mo gre multi
+  tun prot ipsec profile PROFILER
+
+! NHRP
+
+int t1
+  ip nhrp network-id 100
+  ip nhrp holdtime 120
+  ip nhrp auth cisco
+  ip nhrp map multicast dynamic
+  exit
+
