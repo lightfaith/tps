@@ -1,0 +1,35 @@
+hostname RK
+int f0/0
+  ip add 10.0.0.1 255.255.255.252
+  no sh
+  exit
+
+int f0/1
+  ip add 192.168.1.1 255.255.255.0
+  no sh
+  exit
+
+ip route 192.168.2.0 255.255.255.0 10.0.0.2
+
+snmp-server community cisco ro
+snmp-server community CISCO rw
+
+! from pc: snmp-check -t 192.168.1.1 -v1 -c cisco
+!          snmp-check -t 192.168.1.1 -v2 -c cisco
+!          snmp-check -t 192.168.1.1 -v2c -c cisco
+!          snmpget 192.168.1.1 -c cisco -v1 .1.3.6.1.2.1.1.5.0
+!          snmpset -c CISCO -v1 192.168.1.1 .1.3.6.1.2.1.1.5.0 s UII
+
+
+! v3
+snmp-server group GRUPA v3 priv read RID write WRAJT
+snmp-server view RID iso included
+snmp-server view WRAJT iso included
+snmp-server user admin GRUPA v3 auth md5 password priv des PASSWORD
+
+! from pc: snmpwalk 192.168.1.1 -v3 -l authPriv -u admin -a md5 -A password -x des -X PASSWORD
+!          snmpget -v3 192.168.1.1 .1.3.6.1.2.1.1.5.0 -l authPriv -u admin -a md5 -A password -x des -X PASSWORD
+!          snmpset -v3 -l authPriv -u admin -a md5 -A password -x des -X PASSWORD 192.168.1.1 .1.3.6.1.2.1.1.5.0 s UIIIII
+
+
+
